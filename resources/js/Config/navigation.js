@@ -13,6 +13,9 @@ export const adminNav = [
     { label: 'Notifications', route: 'admin.notifications.index', icon: 'Bell' },
     { label: 'Emails', route: 'admin.emails.index', icon: 'Mail' },
     { label: 'Settings', route: 'admin.settings.index', icon: 'Settings' },
+
+    { label: 'Payment Methods', route: 'admin.payment-methods.index', icon: 'CreditCard' },
+{ label: 'Payments', route: 'admin.payments.index', icon: 'Receipt' },
 ];
 
 export const userNav = [

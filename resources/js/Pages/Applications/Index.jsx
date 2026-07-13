@@ -1,7 +1,7 @@
 // resources/js/Pages/Applications/Index.jsx
 import UserLayout from '@/Layouts/UserLayout';
 import VoucherCard from '@/Components/VoucherCard';
-import { usePage } from '@inertiajs/react';
+import { usePage, Link } from '@inertiajs/react';
 
 const statusStyles = {
     pending: 'bg-status-pending/10 text-status-pending',
@@ -62,6 +62,15 @@ export default function ApplicationsIndex({ applications }) {
                                     </span>
                                 </p>
                             </div>
+
+                            {app.payment_status === 'not_paid' && (
+                                <Link
+                                    href={route('applications.pay', app.id)}
+                                    className="block text-center mt-3 bg-signal text-navy font-semibold text-xs py-2 rounded-lg hover:bg-signal-dark transition-colors"
+                                >
+                                    Pay Application Fee
+                                </Link>
+                            )}
                         </VoucherCard>
                     ))}
                 </div>

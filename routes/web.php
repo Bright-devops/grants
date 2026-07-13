@@ -1,11 +1,18 @@
 <?php
 
 use App\Http\Controllers\Admin\GrantPlanController as AdminGrantPlanController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\GrantPlanController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\KycController;
+use App\Http\Controllers\Admin\KycController as AdminKycController;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -33,11 +40,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/grant-plans/{grantPlan}/apply', [ApplicationController::class, 'store'])->name('applications.store');
     Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
 
-    Route::get('/wallet', fn() => Inertia::render('Placeholder', ['title' => 'Wallet']))->name('wallet.index');
+    Route::get('/applications/{application}/pay', [PaymentController::class, 'create'])->name('applications.pay');
+    Route::post('/applications/{application}/pay', [PaymentController::class, 'store'])->name('applications.pay.store');
+
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::get('/withdrawals', fn() => Inertia::render('Placeholder', ['title' => 'Withdrawals']))->name('withdrawals.index');
     Route::get('/invoices', fn() => Inertia::render('Placeholder', ['title' => 'Invoices']))->name('invoices.index');
     Route::get('/notifications', fn() => Inertia::render('Placeholder', ['title' => 'Notifications']))->name('notifications.index');
     Route::get('/settings', fn() => Inertia::render('Placeholder', ['title' => 'Settings']))->name('settings.index');
+    Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
+    Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
 });
 
 /*
@@ -69,14 +81,34 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::get('/applications', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Applications']))->name('applications.index');
     Route::get('/kyc', fn() => Inertia::render('Admin/Placeholder', ['title' => 'KYC']))->name('kyc.index');
-    Route::get('/wallet', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Wallet']))->name('wallet.index');
+
+    // Wallet — index + fund via AdminWalletController
+    Route::get('/wallet', [AdminWalletController::class, 'index'])->name('wallet.index');
+    Route::post('/wallet/{wallet}/fund', [AdminWalletController::class, 'fund'])->name('wallet.fund');
+
     Route::get('/withdrawals', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Withdrawals']))->name('withdrawals.index');
-    Route::get('/payment-methods', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Payment Methods']))->name('payment-methods.index');
+
+    // Payment Methods — full CRUD via PaymentMethodController
+    Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
+    Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::put('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('payment-methods.update');
+    Route::delete('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+    Route::patch('/payment-methods/{paymentMethod}/toggle-status', [PaymentMethodController::class, 'toggleStatus'])->name('payment-methods.toggle-status');
+
+    // Payments — review/confirm/reject via AdminPaymentController
+    Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
+    Route::patch('/payments/{payment}/confirm', [AdminPaymentController::class, 'confirm'])->name('payments.confirm');
+    Route::patch('/payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
+
     Route::get('/testimonials', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Testimonials']))->name('testimonials.index');
     Route::get('/pages', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Pages']))->name('pages.index');
     Route::get('/notifications', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Notifications']))->name('notifications.index');
     Route::get('/emails', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Emails']))->name('emails.index');
     Route::get('/settings', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Settings']))->name('settings.index');
+
+    Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
+    Route::patch('/kyc/{kyc}/approve', [AdminKycController::class, 'approve'])->name('kyc.approve');
+    Route::patch('/kyc/{kyc}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
 });
 
 require __DIR__ . '/auth.php';
