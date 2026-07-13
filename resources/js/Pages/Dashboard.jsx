@@ -1,26 +1,26 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+// resources/js/Pages/Dashboard.jsx
+import UserLayout from '@/Layouts/UserLayout';
+import VoucherCard from '@/Components/VoucherCard';
 
-export default function Dashboard() {
+export default function Dashboard({ wallet, applications }) {
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Dashboard
-                </h2>
-            }
-        >
-            <Head title="Dashboard" />
-
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            You're logged in!
-                        </div>
-                    </div>
+        <UserLayout header="Dashboard">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white rounded-xl p-5 shadow-sm">
+                    <p className="text-xs font-medium text-navy/50 uppercase tracking-wide">Wallet Balance</p>
+                    <p className="font-display text-2xl font-bold text-navy mt-1">
+                        ${wallet?.balance ?? '0.00'}
+                    </p>
                 </div>
+                {/* repeat for Grant Status, KYC Status, Withdrawal Status */}
             </div>
-        </AuthenticatedLayout>
+
+            <VoucherCard>
+                <p className="text-xs font-mono uppercase tracking-wider text-navy/50">Latest Application</p>
+                <p className="font-mono text-lg text-navy font-medium">
+                    {applications?.[0]?.reference ?? 'No applications yet'}
+                </p>
+            </VoucherCard>
+        </UserLayout>
     );
 }
