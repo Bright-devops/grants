@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import { adminNav } from '@/Config/navigation';
 
 export default function AdminLayout({ children, header }) {
-    const { auth, ziggy } = usePage().props;
+    const { auth, ziggy, settings } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const currentRoute = ziggy?.location ?? '';
 
@@ -17,8 +17,9 @@ export default function AdminLayout({ children, header }) {
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-white/10">
-                    <span className="font-display font-bold text-lg tracking-tight">
-                        Grant<span className="text-signal">Admin</span>
+                    <span className="font-display font-bold text-lg tracking-tight flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-signal shrink-0" />
+                        {settings?.company_name ?? 'United Care Alliance (UCA)'} <span className="text-signal font-normal text-sm">Admin</span>
                     </span>
                 </div>
 

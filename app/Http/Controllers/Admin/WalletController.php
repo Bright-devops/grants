@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FundWalletRequest;
+use App\Models\ActivityLog;
 use App\Models\Wallet;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,8 @@ class WalletController extends Controller
             (float) $request->validated('amount'),
             $request->validated('description') ?? 'Manual funding by admin'
         );
+
+        ActivityLog::log('wallet.funded', $wallet, ['amount' => $request->validated('amount')]);
 
         return back()->with('success', 'Wallet funded successfully.');
     }

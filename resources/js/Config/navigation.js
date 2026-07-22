@@ -8,14 +8,13 @@ export const adminNav = [
     { label: 'Wallet', route: 'admin.wallet.index', icon: 'Wallet' },
     { label: 'Withdrawals', route: 'admin.withdrawals.index', icon: 'ArrowDownToLine' },
     { label: 'Payment Methods', route: 'admin.payment-methods.index', icon: 'CreditCard' },
+    { label: 'Payments', route: 'admin.payments.index', icon: 'Receipt' },
     { label: 'Testimonials', route: 'admin.testimonials.index', icon: 'MessageSquareQuote' },
     { label: 'Pages', route: 'admin.pages.index', icon: 'Layout' },
     { label: 'Notifications', route: 'admin.notifications.index', icon: 'Bell' },
     { label: 'Emails', route: 'admin.emails.index', icon: 'Mail' },
+    { label: 'Activity Logs', route: 'admin.activity-logs.index', icon: 'History' },
     { label: 'Settings', route: 'admin.settings.index', icon: 'Settings' },
-
-    { label: 'Payment Methods', route: 'admin.payment-methods.index', icon: 'CreditCard' },
-{ label: 'Payments', route: 'admin.payments.index', icon: 'Receipt' },
 ];
 
 export const userNav = [

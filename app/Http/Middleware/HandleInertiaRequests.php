@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,17 +30,30 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()?->load('latestKyc'),
-                'roles' => $request->user() ? $request->user()->getRoleNames() : [],
-                'permissions' => $request->user() ? $request->user()->getAllPermissions()->pluck('name') : [],
+                'user' => $user?->load('latestKyc'),
+                'roles' => $user ? $user->getRoleNames() : [],
+                'permissions' => $user ? $user->getAllPermissions()->pluck('name') : [],
+                'unread_notifications_count' => $user?->unreadNotifications()->count() ?? 0,
             ],
 
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error' => fn() => $request->session()->get('error'),
+            ],
+
+            'settings' => [
+                'company_name' => Setting::get('company_name', 'United Care Alliance (UCA)'),
+                'logo_path' => Setting::get('logo_path'),
+                'support_email' => Setting::get('support_email'),
+                'facebook_url' => Setting::get('facebook_url'),
+                'twitter_url' => Setting::get('twitter_url'),
+                'instagram_url' => Setting::get('instagram_url'),
+                'linkedin_url' => Setting::get('linkedin_url'),
             ],
         ];
     }

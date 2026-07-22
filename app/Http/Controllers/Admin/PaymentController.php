@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -40,6 +41,10 @@ class PaymentController extends Controller
             'status' => 'under_review',
         ]);
 
+        $payment->user->notify(new \App\Notifications\PaymentStatusNotification($payment));
+
+        ActivityLog::log('payment.confirmed', $payment);
+
         return back()->with('success', 'Payment confirmed.');
     }
 
@@ -48,6 +53,10 @@ class PaymentController extends Controller
         $payment->update(['status' => 'failed']);
 
         $payment->grantApplication?->update(['payment_status' => 'not_paid']);
+
+        $payment->user->notify(new \App\Notifications\PaymentStatusNotification($payment));
+
+        ActivityLog::log('payment.rejected', $payment);
 
         return back()->with('success', 'Payment rejected.');
     }

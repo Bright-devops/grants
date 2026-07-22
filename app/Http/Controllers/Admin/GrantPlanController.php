@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGrantPlanRequest;
 use App\Http\Requests\Admin\UpdateGrantPlanRequest;
+use App\Models\ActivityLog;
 use App\Models\GrantPlan;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,7 +24,9 @@ class GrantPlanController extends Controller
 
     public function store(StoreGrantPlanRequest $request): RedirectResponse
     {
-        GrantPlan::create($request->validated());
+        $grantPlan = GrantPlan::create($request->validated());
+
+        ActivityLog::log('grant_plan.created', $grantPlan);
 
         return back()->with('success', 'Grant plan created successfully.');
     }
@@ -31,6 +34,8 @@ class GrantPlanController extends Controller
     public function update(UpdateGrantPlanRequest $request, GrantPlan $grantPlan): RedirectResponse
     {
         $grantPlan->update($request->validated());
+
+        ActivityLog::log('grant_plan.updated', $grantPlan);
 
         return back()->with('success', 'Grant plan updated successfully.');
     }
@@ -40,6 +45,8 @@ class GrantPlanController extends Controller
         if ($grantPlan->applications()->exists()) {
             return back()->with('error', 'Cannot delete a plan that has applications. Deactivate it instead.');
         }
+
+        ActivityLog::log('grant_plan.deleted', $grantPlan);
 
         $grantPlan->delete();
 

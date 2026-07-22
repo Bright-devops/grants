@@ -1,28 +1,46 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GrantPlanController as AdminGrantPlanController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WalletController as AdminWalletController;
+use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\GrantPlanController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\TestimonialController as PublicTestimonialController;
 use App\Http\Controllers\WalletController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\Admin\KycController as AdminKycController;
+use App\Http\Controllers\InvoiceController;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+/*
+|--------------------------------------------------------------------------
+| Public routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+Route::get('/grant-plans-public', [PageController::class, 'grantPlans'])->name('public.grant-plans');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact.index');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:10,1')->name('contact.store');
+Route::get('/testimonials', [PublicTestimonialController::class, 'index'])->name('public.testimonials.index');
 
 /*
 |--------------------------------------------------------------------------
@@ -32,8 +50,6 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
 
-    Route::get('/kyc', fn() => Inertia::render('Placeholder', ['title' => 'KYC']))->name('kyc.index');
-
     Route::get('/grant-plans', [GrantPlanController::class, 'index'])->name('grant-plans.index');
 
     Route::get('/grant-plans/{grantPlan}/apply', [ApplicationController::class, 'create'])->name('applications.create');
@@ -41,15 +57,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
 
     Route::get('/applications/{application}/pay', [PaymentController::class, 'create'])->name('applications.pay');
-    Route::post('/applications/{application}/pay', [PaymentController::class, 'store'])->name('applications.pay.store');
+    Route::post('/applications/{application}/pay', [PaymentController::class, 'store'])->middleware('throttle:10,1')->name('applications.pay.store');
 
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
-    Route::get('/withdrawals', fn() => Inertia::render('Placeholder', ['title' => 'Withdrawals']))->name('withdrawals.index');
-    Route::get('/invoices', fn() => Inertia::render('Placeholder', ['title' => 'Invoices']))->name('invoices.index');
-    Route::get('/notifications', fn() => Inertia::render('Placeholder', ['title' => 'Notifications']))->name('notifications.index');
+
+    // Withdrawals — index/create/store via WithdrawalController
+    Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::get('/withdrawals/create', [WithdrawalController::class, 'create'])->name('withdrawals.create');
+    Route::post('/withdrawals', [WithdrawalController::class, 'store'])->middleware('throttle:10,1')->name('withdrawals.store');
+
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+
+    // Notifications — full user-facing view via NotificationController
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/mark-read', [NotificationController::class, 'markRead'])->name('notifications.mark-read');
+    Route::patch('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+
     Route::get('/settings', fn() => Inertia::render('Placeholder', ['title' => 'Settings']))->name('settings.index');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
-    Route::post('/kyc', [KycController::class, 'store'])->name('kyc.store');
+    Route::post('/kyc', [KycController::class, 'store'])->middleware('throttle:10,1')->name('kyc.store');
 });
 
 /*
@@ -69,8 +95,15 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', fn() => Inertia::render('Admin/Dashboard'))->name('dashboard');
-    Route::get('/users', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Users']))->name('users.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Users — full management via UserController
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
+    Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::patch('/users/{user}/make-admin', [UserController::class, 'makeAdmin'])->name('users.make-admin');
+    Route::patch('/users/{user}/remove-admin', [UserController::class, 'removeAdmin'])->name('users.remove-admin');
 
     // Grant Plans — full CRUD via GrantPlanController
     Route::get('/grant-plans', [AdminGrantPlanController::class, 'index'])->name('grant-plans.index');
@@ -79,14 +112,22 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/grant-plans/{grantPlan}', [AdminGrantPlanController::class, 'destroy'])->name('grant-plans.destroy');
     Route::patch('/grant-plans/{grantPlan}/toggle-status', [AdminGrantPlanController::class, 'toggleStatus'])->name('grant-plans.toggle-status');
 
-    Route::get('/applications', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Applications']))->name('applications.index');
-    Route::get('/kyc', fn() => Inertia::render('Admin/Placeholder', ['title' => 'KYC']))->name('kyc.index');
+    // Applications — review/approve/reject/disburse/delete via ApplicationController
+    Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
+    Route::patch('/applications/{application}/approve', [AdminApplicationController::class, 'approve'])->name('applications.approve');
+    Route::patch('/applications/{application}/reject', [AdminApplicationController::class, 'reject'])->name('applications.reject');
+    Route::patch('/applications/{application}/disburse', [AdminApplicationController::class, 'disburse'])->name('applications.disburse');
+    Route::delete('/applications/{application}', [AdminApplicationController::class, 'destroy'])->name('applications.destroy');
 
     // Wallet — index + fund via AdminWalletController
     Route::get('/wallet', [AdminWalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/{wallet}/fund', [AdminWalletController::class, 'fund'])->name('wallet.fund');
 
-    Route::get('/withdrawals', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Withdrawals']))->name('withdrawals.index');
+    // Withdrawals — review/approve/mark-paid/reject via AdminWithdrawalController
+    Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals.index');
+    Route::patch('/withdrawals/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('withdrawals.approve');
+    Route::patch('/withdrawals/{withdrawal}/mark-paid', [AdminWithdrawalController::class, 'markPaid'])->name('withdrawals.mark-paid');
+    Route::patch('/withdrawals/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('withdrawals.reject');
 
     // Payment Methods — full CRUD via PaymentMethodController
     Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
@@ -100,11 +141,27 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/payments/{payment}/confirm', [AdminPaymentController::class, 'confirm'])->name('payments.confirm');
     Route::patch('/payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
 
-    Route::get('/testimonials', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Testimonials']))->name('testimonials.index');
+    // Testimonials — full CRUD via TestimonialController
+    Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::post('/testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
+    Route::put('/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
+    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+    Route::patch('/testimonials/{testimonial}/toggle-featured', [TestimonialController::class, 'toggleFeatured'])->name('testimonials.toggle-featured');
+
     Route::get('/pages', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Pages']))->name('pages.index');
-    Route::get('/notifications', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Notifications']))->name('notifications.index');
+
+    // Notifications — admin broadcast/announcement via AnnouncementController
+    Route::get('/notifications', [AnnouncementController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/send', [AnnouncementController::class, 'send'])->name('notifications.send');
+
     Route::get('/emails', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Emails']))->name('emails.index');
-    Route::get('/settings', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Settings']))->name('settings.index');
+
+    // Activity Logs — audit trail via ActivityLogController
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+
+    // Settings — full read/update via SettingController
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
     Route::patch('/kyc/{kyc}/approve', [AdminKycController::class, 'approve'])->name('kyc.approve');

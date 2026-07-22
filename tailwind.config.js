@@ -31,7 +31,7 @@ export default {
                 },
             },
             fontFamily: {
-                display: ['Sora', ...defaultTheme.fontFamily.sans],
+                display: ['Fraunces', ...defaultTheme.fontFamily.serif],
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
                 mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
             },

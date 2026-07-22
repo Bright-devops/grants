@@ -44,7 +44,7 @@ class RegisteredUserController extends Controller
         ]);
 
         $user->wallet()->create();
-
+        $user->notify(new \App\Notifications\WelcomeNotification());
         event(new Registered($user));
 
         Auth::login($user);

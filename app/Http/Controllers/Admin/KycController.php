@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Kyc;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,10 @@ class KycController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        $kyc->user->notify(new \App\Notifications\KycStatusNotification($kyc));
+
+        ActivityLog::log('kyc.approved', $kyc);
+
         return back()->with('success', 'KYC approved.');
     }
 
@@ -54,6 +59,10 @@ class KycController extends Controller
             'rejection_reason' => $validated['rejection_reason'],
             'reviewed_at' => now(),
         ]);
+
+        $kyc->user->notify(new \App\Notifications\KycStatusNotification($kyc));
+
+        ActivityLog::log('kyc.rejected', $kyc, ['reason' => $kyc->rejection_reason]);
 
         return back()->with('success', 'KYC rejected.');
     }

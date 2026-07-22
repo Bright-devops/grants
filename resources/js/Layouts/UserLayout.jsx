@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import { userNav } from '@/Config/navigation';
 
 export default function UserLayout({ children, header }) {
-    const { auth, ziggy } = usePage().props;
+    const { auth, ziggy, settings } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const currentRoute = ziggy?.location ?? '';
     const kycStatus = auth.user.latest_kyc?.status ?? null;
@@ -17,8 +17,9 @@ export default function UserLayout({ children, header }) {
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-white/10">
-                    <span className="font-display font-bold text-lg tracking-tight">
-                        Grant<span className="text-signal">Portal</span>
+                    <span className="font-display font-bold text-lg tracking-tight flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-signal shrink-0" />
+                        {settings?.company_name ?? 'United Care Alliance (UCA)'}
                     </span>
                 </div>
 
@@ -26,23 +27,32 @@ export default function UserLayout({ children, header }) {
                     {userNav.map((item) => {
                         const Icon = Icons[item.icon] ?? Icons.Circle;
                         const active = currentRoute.includes(item.route.split('.')[0]);
+                        const showBadge = item.route === 'notifications.index' && auth.unread_notifications_count > 0;
+
                         return (
                             <Link
                                 key={item.route}
                                 href={route(item.route)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative
                                 ${active
                                     ? 'bg-signal text-navy shadow-sm'
                                     : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
                             >
-                                <Icon size={18} strokeWidth={2} />
+                                <span className="relative">
+                                    <Icon size={18} strokeWidth={2} />
+                                    {showBadge && (
+                                        <span className="absolute -top-1.5 -right-1.5 bg-signal text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                                            {auth.unread_notifications_count > 9 ? '9+' : auth.unread_notifications_count}
+                                        </span>
+                                    )}
+                                </span>
                                 {item.label}
                             </Link>
                         );
                     })}
                 </nav>
 
-                {/* KYC status nudge — matches spec's "verify before applying" flow */}
+                {/* KYC status nudge - shown until verification is approved */}
                 {kycStatus !== 'approved' && (
                     <div className="mx-3 mb-3 p-3 rounded-lg bg-signal/10 border border-signal/30">
                         <p className="text-xs text-signal font-medium leading-snug">
