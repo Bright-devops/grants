@@ -1,7 +1,85 @@
 import GuestLayout from "@/Layouts/GuestLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Eye, EyeOff, Mail, Lock, User, UserPlus, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    User,
+    UserPlus,
+    Loader2,
+    ShieldCheck,
+    Check,
+} from "lucide-react";
+import { useState, useMemo } from "react";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: (i = 0) => ({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.45, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+    }),
+};
+
+// ---- Password strength helper ----
+function getStrength(password) {
+    if (!password) return { score: 0, label: "", color: "bg-slate-200" };
+
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    const levels = [
+        { label: "Too weak", color: "bg-danger-500" },
+        { label: "Weak", color: "bg-danger-500" },
+        { label: "Fair", color: "bg-warning-500" },
+        { label: "Good", color: "bg-primary-500" },
+        { label: "Strong", color: "bg-success-500" },
+    ];
+
+    return { score, ...levels[score] };
+}
+
+function FormField({
+    label,
+    icon: Icon,
+    error,
+    children,
+}) {
+    return (
+        <div>
+            <label className="mb-2 block text-sm font-semibold text-ink">
+                {label}
+            </label>
+
+            <div className="relative">
+                <Icon
+                    size={19}
+                    strokeWidth={2}
+                    className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+                        error ? "text-danger-400" : "text-slate-400"
+                    }`}
+                />
+                {children}
+            </div>
+
+            {error && (
+                <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 flex items-center gap-1.5 text-sm text-danger-600"
+                >
+                    <span className="h-1 w-1 rounded-full bg-danger-500" />
+                    {error}
+                </motion.p>
+            )}
+        </div>
+    );
+}
 
 export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
@@ -14,286 +92,216 @@ export default function Register() {
         password_confirmation: "",
     });
 
+    const strength = useMemo(() => getStrength(data.password), [data.password]);
+    const passwordsMatch =
+        data.password_confirmation.length > 0 &&
+        data.password === data.password_confirmation;
+
     const submit = (e) => {
         e.preventDefault();
-
         post(route("register"), {
             onFinish: () => reset("password", "password_confirmation"),
         });
     };
 
+    const inputBase =
+        "h-14 w-full rounded-2xl border bg-white pl-12 pr-4 text-[15px] text-ink placeholder:text-slate-400 transition-all duration-200 outline-none focus:ring-[3px]";
+
+    const inputState = (hasError) =>
+        hasError
+            ? "border-danger-300 focus:border-danger-400 focus:ring-danger-100"
+            : "border-slate-200 focus:border-primary-500 focus:ring-primary-100";
+
     return (
         <GuestLayout>
             <Head title="Register" />
 
-            <div>
+            <motion.div initial="hidden" animate="visible">
 
-                <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
-                    Get Started
-                </span>
+                {/* ---- Header ---- */}
+                <motion.div variants={fadeUp} custom={0}>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 ring-1 ring-inset ring-primary-100">
+                        <ShieldCheck size={15} />
+                        Get Started
+                    </span>
 
-                <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900">
-                    Create Your Account
-                </h1>
+                    <h1 className="mt-6 text-[2.25rem] font-bold leading-[1.15] tracking-tight text-ink">
+                        Create your account
+                    </h1>
 
-                <p className="mt-4 text-lg leading-8 text-slate-600">
-                    Join United Care Alliance to start your application and
-                    access community assistance services.
-                </p>
+                    <p className="mt-3 text-[15px] leading-7 text-slate-500">
+                        Join United Care Alliance to start your application and
+                        access community assistance services.
+                    </p>
+                </motion.div>
 
-            </div>
+                {/* ---- Form ---- */}
+                <form onSubmit={submit} className="mt-9 space-y-6">
 
-            <form
-                onSubmit={submit}
-                className="mt-10 space-y-7"
-            >
-
-                {/* NAME */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Full Name
-                    </label>
-
-                    <div className="relative">
-
-                        <User
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type="text"
-                            value={data.name}
-                            autoComplete="name"
-                            autoFocus
-                            onChange={(e) =>
-                                setData("name", e.target.value)
-                            }
-                            placeholder="Enter your full name"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-4 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.name
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                    </div>
-
-                    {errors.name && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.name}
-                        </p>
-
-                    )}
-
-                </div>
-
-                {/* EMAIL */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Email Address
-                    </label>
-
-                    <div className="relative">
-
-                        <Mail
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type="email"
-                            value={data.email}
-                            autoComplete="username"
-                            onChange={(e) =>
-                                setData("email", e.target.value)
-                            }
-                            placeholder="Enter your email address"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-4 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.email
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                    </div>
-
-                    {errors.email && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.email}
-                        </p>
-
-                    )}
-
-                </div>
-
-                {/* PASSWORD */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Password
-                    </label>
-
-                    <div className="relative">
-
-                        <Lock
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={data.password}
-                            autoComplete="new-password"
-                            onChange={(e) =>
-                                setData("password", e.target.value)
-                            }
-                            placeholder="Create a password"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-14 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.password
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPassword(!showPassword)
-                            }
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
-                        >
-                            {showPassword ? (
-                                <EyeOff size={20} />
-                            ) : (
-                                <Eye size={20} />
-                            )}
-                        </button>
-
-                    </div>
-
-                    {errors.password && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.password}
-                        </p>
-
-                    )}
-
-                </div>
-
-                {/* CONFIRM PASSWORD */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Confirm Password
-                    </label>
-
-                    <div className="relative">
-
-                        <Lock
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={data.password_confirmation}
-                            autoComplete="new-password"
-                            onChange={(e) =>
-                                setData(
-                                    "password_confirmation",
-                                    e.target.value
-                                )
-                            }
-                            placeholder="Re-enter your password"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-14 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.password_confirmation
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
-                        >
-                            {showConfirmPassword ? (
-                                <EyeOff size={20} />
-                            ) : (
-                                <Eye size={20} />
-                            )}
-                        </button>
-
-                    </div>
-
-                    {errors.password_confirmation && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.password_confirmation}
-                        </p>
-
-                    )}
-
-                </div>
-
-                {/* SUBMIT */}
-
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-
-                    {processing ? (
-
-                        <>
-                            <Loader2
-                                size={20}
-                                className="animate-spin"
+                    <motion.div variants={fadeUp} custom={1}>
+                        <FormField label="Full name" icon={User} error={errors.name}>
+                            <input
+                                type="text"
+                                value={data.name}
+                                autoComplete="name"
+                                autoFocus
+                                onChange={(e) => setData("name", e.target.value)}
+                                placeholder="Enter your full name"
+                                className={`${inputBase} ${inputState(errors.name)}`}
                             />
-                            Creating Account...
-                        </>
+                        </FormField>
+                    </motion.div>
 
-                    ) : (
+                    <motion.div variants={fadeUp} custom={2}>
+                        <FormField label="Email address" icon={Mail} error={errors.email}>
+                            <input
+                                type="email"
+                                value={data.email}
+                                autoComplete="username"
+                                onChange={(e) => setData("email", e.target.value)}
+                                placeholder="Enter your email address"
+                                className={`${inputBase} ${inputState(errors.email)}`}
+                            />
+                        </FormField>
+                    </motion.div>
 
-                        <>
-                            <UserPlus size={20} />
-                            Create Account
-                        </>
+                    <motion.div variants={fadeUp} custom={3}>
+                        <FormField label="Password" icon={Lock} error={errors.password}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={data.password}
+                                autoComplete="new-password"
+                                onChange={(e) => setData("password", e.target.value)}
+                                placeholder="Create a password"
+                                className={`${inputBase} pr-14 ${inputState(errors.password)}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-ink"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                            </button>
+                        </FormField>
 
-                    )}
+                        {/* Strength meter */}
+                        {data.password.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="mt-3 overflow-hidden"
+                            >
+                                <div className="flex gap-1.5">
+                                    {[0, 1, 2, 3].map((i) => (
+                                        <div
+                                            key={i}
+                                            className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                                                i < strength.score ? strength.color : "bg-slate-150 bg-slate-200"
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                                <p className="mt-1.5 text-xs font-medium text-slate-500">
+                                    {strength.label}
+                                </p>
+                            </motion.div>
+                        )}
+                    </motion.div>
 
-                </button>
+                    <motion.div variants={fadeUp} custom={4}>
+                        <FormField
+                            label="Confirm password"
+                            icon={Lock}
+                            error={errors.password_confirmation}
+                        >
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={data.password_confirmation}
+                                autoComplete="new-password"
+                                onChange={(e) =>
+                                    setData("password_confirmation", e.target.value)
+                                }
+                                placeholder="Re-enter your password"
+                                className={`${inputBase} pr-14 ${inputState(
+                                    errors.password_confirmation
+                                )}`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowConfirmPassword(!showConfirmPassword)
+                                }
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-ink"
+                                tabIndex={-1}
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeOff size={19} />
+                                ) : (
+                                    <Eye size={19} />
+                                )}
+                            </button>
+                        </FormField>
 
-                {/* LOGIN LINK */}
+                        {passwordsMatch && (
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="mt-2 flex items-center gap-1.5 text-sm font-medium text-success-600"
+                            >
+                                <Check size={14} strokeWidth={3} />
+                                Passwords match
+                            </motion.p>
+                        )}
+                    </motion.div>
 
-                <p className="text-center text-sm text-slate-600">
+                    {/* ---- Submit ---- */}
+                    <motion.div variants={fadeUp} custom={5}>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary-600 text-[15px] font-semibold text-white shadow-lg shadow-primary-600/25 transition-all duration-200 hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-600/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                            {processing ? (
+                                <>
+                                    <Loader2 size={19} className="animate-spin" />
+                                    Creating account...
+                                </>
+                            ) : (
+                                <>
+                                    <UserPlus
+                                        size={19}
+                                        className="transition-transform duration-200 group-hover:-translate-y-0.5"
+                                    />
+                                    Create account
+                                </>
+                            )}
+                        </button>
 
-                    Already have an account?{" "}
+                        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                            <ShieldCheck size={13} />
+                            Your information is encrypted and handled securely
+                        </p>
+                    </motion.div>
 
-                    <Link
-                        href={route("login")}
-                        className="font-semibold text-blue-600 transition hover:text-blue-700"
+                    {/* ---- Login link ---- */}
+                    <motion.p
+                        variants={fadeUp}
+                        custom={6}
+                        className="border-t border-slate-100 pt-6 text-center text-sm text-slate-500"
                     >
-                        Sign in
-                    </Link>
+                        Already have an account?{" "}
+                        <Link
+                            href={route("login")}
+                            className="font-semibold text-primary-600 transition-colors hover:text-primary-700"
+                        >
+                            Sign in
+                        </Link>
+                    </motion.p>
 
-                </p>
+                </form>
 
-            </form>
-
+            </motion.div>
         </GuestLayout>
     );
 }

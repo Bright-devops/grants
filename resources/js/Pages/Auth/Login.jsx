@@ -1,7 +1,59 @@
 import GuestLayout from "@/Layouts/GuestLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
-import { Eye, EyeOff, Mail, Lock, LogIn, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    LogIn,
+    Loader2,
+    ShieldCheck,
+    CheckCircle2,
+} from "lucide-react";
 import { useState } from "react";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: (i = 0) => ({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.45, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+    }),
+};
+
+function FormField({ label, icon: Icon, error, children, trailing }) {
+    return (
+        <div>
+            <label className="mb-2 block text-sm font-semibold text-ink">
+                {label}
+            </label>
+
+            <div className="relative">
+                <Icon
+                    size={19}
+                    strokeWidth={2}
+                    className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+                        error ? "text-danger-400" : "text-slate-400"
+                    }`}
+                />
+                {children}
+                {trailing}
+            </div>
+
+            {error && (
+                <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 flex items-center gap-1.5 text-sm text-danger-600"
+                >
+                    <span className="h-1 w-1 rounded-full bg-danger-500" />
+                    {error}
+                </motion.p>
+            )}
+        </div>
+    );
+}
 
 export default function Login({ status, canResetPassword }) {
     const [showPassword, setShowPassword] = useState(false);
@@ -14,224 +66,190 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
-
         post(route("login"), {
             onFinish: () => reset("password"),
         });
     };
 
+    const inputBase =
+        "h-14 w-full rounded-2xl border bg-white pl-12 pr-4 text-[15px] text-ink placeholder:text-slate-400 transition-all duration-200 outline-none focus:ring-[3px]";
+
+    const inputState = (hasError) =>
+        hasError
+            ? "border-danger-300 focus:border-danger-400 focus:ring-danger-100"
+            : "border-slate-200 focus:border-primary-500 focus:ring-primary-100";
+
     return (
         <GuestLayout>
             <Head title="Sign In" />
 
-            <div>
+            <motion.div initial="hidden" animate="visible">
 
-                <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
-                    Secure Access
-                </span>
+                {/* ---- Header ---- */}
+                <motion.div variants={fadeUp} custom={0}>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 ring-1 ring-inset ring-primary-100">
+                        <ShieldCheck size={15} />
+                        Secure Access
+                    </span>
 
-                <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900">
-                    Welcome Back
-                </h1>
+                    <h1 className="mt-6 text-[2.25rem] font-bold leading-[1.15] tracking-tight text-ink">
+                        Welcome back
+                    </h1>
 
-                <p className="mt-4 text-lg leading-8 text-slate-600">
-                    Sign in to continue your application, manage your profile,
-                    and securely access United Care Alliance services.
-                </p>
+                    <p className="mt-3 text-[15px] leading-7 text-slate-500">
+                        Sign in to continue your application, manage your profile,
+                        and securely access United Care Alliance services.
+                    </p>
+                </motion.div>
 
-            </div>
+                {/* ---- Status message ---- */}
+                {status && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-7 flex items-start gap-3 rounded-2xl border border-success-100 bg-success-50 p-4"
+                    >
+                        <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-success-600" />
+                        <p className="text-sm font-medium text-success-700">{status}</p>
+                    </motion.div>
+                )}
 
-            {status && (
+                {/* ---- Form ---- */}
+                <form onSubmit={submit} className="mt-9 space-y-6">
 
-                <div className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-                    {status}
-                </div>
+                    <motion.div variants={fadeUp} custom={1}>
+                        <FormField label="Email address" icon={Mail} error={errors.email}>
+                            <input
+                                type="email"
+                                value={data.email}
+                                autoComplete="username"
+                                autoFocus
+                                onChange={(e) => setData("email", e.target.value)}
+                                placeholder="Enter your email address"
+                                className={`${inputBase} ${inputState(errors.email)}`}
+                            />
+                        </FormField>
+                    </motion.div>
 
-            )}
-
-            <form
-                onSubmit={submit}
-                className="mt-10 space-y-7"
-            >
-
-                {/* EMAIL */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Email Address
-                    </label>
-
-                    <div className="relative">
-
-                        <Mail
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type="email"
-                            value={data.email}
-                            autoComplete="username"
-                            onChange={(e) =>
-                                setData("email", e.target.value)
+                    <motion.div variants={fadeUp} custom={2}>
+                        <FormField
+                            label="Password"
+                            icon={Lock}
+                            error={errors.password}
+                            trailing={
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-ink"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                                </button>
                             }
-                            placeholder="Enter your email address"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-4 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.email
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                    </div>
-
-                    {errors.email && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.email}
-                        </p>
-
-                    )}
-
-                </div>
-
-                {/* PASSWORD */}
-
-                <div>
-
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                        Password
-                    </label>
-
-                    <div className="relative">
-
-                        <Lock
-                            size={20}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        />
-
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            value={data.password}
-                            autoComplete="current-password"
-                            onChange={(e) =>
-                                setData("password", e.target.value)
-                            }
-                            placeholder="Enter your password"
-                            className={`h-14 w-full rounded-2xl border pl-12 pr-14 transition outline-none focus:ring-4 focus:ring-blue-100 ${
-                                errors.password
-                                    ? "border-red-400"
-                                    : "border-slate-300 focus:border-blue-600"
-                            }`}
-                        />
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setShowPassword(!showPassword)
-                            }
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-700"
                         >
-                            {showPassword ? (
-                                <EyeOff size={20} />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={data.password}
+                                autoComplete="current-password"
+                                onChange={(e) => setData("password", e.target.value)}
+                                placeholder="Enter your password"
+                                className={`${inputBase} pr-14 ${inputState(errors.password)}`}
+                            />
+                        </FormField>
+                    </motion.div>
+
+                    {/* ---- Remember me + Forgot password ---- */}
+                    <motion.div
+                        variants={fadeUp}
+                        custom={3}
+                        className="flex items-center justify-between"
+                    >
+                        <label className="flex cursor-pointer items-center gap-2.5 select-none">
+                            <span className="relative flex h-5 w-5 items-center justify-center">
+                                <input
+                                    type="checkbox"
+                                    checked={data.remember}
+                                    onChange={(e) =>
+                                        setData("remember", e.target.checked)
+                                    }
+                                    className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-colors checked:border-primary-600 checked:bg-primary-600"
+                                />
+                                <svg
+                                    className="pointer-events-none absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100"
+                                    viewBox="0 0 12 12"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M2 6l2.5 2.5L10 3"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            </span>
+                            <span className="text-sm font-medium text-slate-600">
+                                Remember me
+                            </span>
+                        </label>
+
+                        {canResetPassword && (
+                            <Link
+                                href={route("password.request")}
+                                className="text-sm font-semibold text-primary-600 transition-colors hover:text-primary-700"
+                            >
+                                Forgot password?
+                            </Link>
+                        )}
+                    </motion.div>
+
+                    {/* ---- Submit ---- */}
+                    <motion.div variants={fadeUp} custom={4}>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="group relative flex h-14 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary-600 text-[15px] font-semibold text-white shadow-lg shadow-primary-600/25 transition-all duration-200 hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-600/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                            {processing ? (
+                                <>
+                                    <Loader2 size={19} className="animate-spin" />
+                                    Signing in...
+                                </>
                             ) : (
-                                <Eye size={20} />
+                                <>
+                                    <LogIn
+                                        size={19}
+                                        className="transition-transform duration-200 group-hover:translate-x-0.5"
+                                    />
+                                    Sign in
+                                </>
                             )}
                         </button>
 
-                    </div>
-
-                    {errors.password && (
-
-                        <p className="mt-2 text-sm text-red-600">
-                            {errors.password}
+                        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                            <ShieldCheck size={13} />
+                            Protected by encrypted, secure authentication
                         </p>
+                    </motion.div>
 
-                    )}
-
-                </div>
-
-                {/* REMEMBER ME + FORGOT PASSWORD */}
-
-                <div className="flex items-center justify-between">
-
-                    <label className="flex cursor-pointer items-center gap-3">
-
-                        <input
-                            type="checkbox"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData("remember", e.target.checked)
-                            }
-                            className="h-5 w-5 rounded-md border-slate-300 text-blue-600 focus:ring-4 focus:ring-blue-100"
-                        />
-
-                        <span className="text-sm font-medium text-slate-600">
-                            Remember me
-                        </span>
-
-                    </label>
-
-                    {canResetPassword && (
-
-                        <Link
-                            href={route("password.request")}
-                            className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
-                        >
-                            Forgot password?
-                        </Link>
-
-                    )}
-
-                </div>
-
-                {/* SUBMIT */}
-
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-base font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-
-                    {processing ? (
-
-                        <>
-                            <Loader2
-                                size={20}
-                                className="animate-spin"
-                            />
-                            Signing In...
-                        </>
-
-                    ) : (
-
-                        <>
-                            <LogIn size={20} />
-                            Sign In
-                        </>
-
-                    )}
-
-                </button>
-
-                {/* REGISTER LINK */}
-
-                <p className="text-center text-sm text-slate-600">
-
-                    Don't have an account?{" "}
-
-                    <Link
-                        href={route("register")}
-                        className="font-semibold text-blue-600 transition hover:text-blue-700"
+                    {/* ---- Register link ---- */}
+                    <motion.p
+                        variants={fadeUp}
+                        custom={5}
+                        className="border-t border-slate-100 pt-6 text-center text-sm text-slate-500"
                     >
-                        Create one
-                    </Link>
+                        Don't have an account?{" "}
+                        <Link
+                            href={route("register")}
+                            className="font-semibold text-primary-600 transition-colors hover:text-primary-700"
+                        >
+                            Create one
+                        </Link>
+                    </motion.p>
 
-                </p>
+                </form>
 
-            </form>
-
+            </motion.div>
         </GuestLayout>
     );
 }

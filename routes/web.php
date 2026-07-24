@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailLogController;
 use App\Http\Controllers\Admin\GrantPlanController as AdminGrantPlanController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -154,7 +155,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/notifications', [AnnouncementController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/send', [AnnouncementController::class, 'send'])->name('notifications.send');
 
-    Route::get('/emails', fn() => Inertia::render('Admin/Placeholder', ['title' => 'Emails']))->name('emails.index');
+    // Emails — sent email log via EmailLogController
+    Route::get('/emails', [EmailLogController::class, 'index'])->name('emails.index');
+    Route::get('/emails/{email}', [EmailLogController::class, 'show'])->name('emails.show');
 
     // Activity Logs — audit trail via ActivityLogController
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
