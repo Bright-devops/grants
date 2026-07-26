@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Search, UserX, UserCheck, Trash2, ShieldCheck } from 'lucide-react';
+import Modal from '@/Components/Modal';
+import { Search, UserX, UserCheck, Trash2, ShieldCheck, Pencil } from 'lucide-react';
 
 const kycBadge = {
     approved: 'bg-status-approved/10 text-status-approved',
@@ -20,12 +21,40 @@ const kycLabel = {
 export default function AdminUsersIndex({ users }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState('');
+    const [editingUser, setEditingUser] = useState(null);
+
+    const { data, setData, put, processing, errors, clearErrors } = useForm({
+        name: '',
+        username: '',
+        email: '',
+        country: '',
+        whatsapp: '',
+    });
 
     const filtered = users.filter(
         (u) =>
             u.name.toLowerCase().includes(search.toLowerCase()) ||
             u.email.toLowerCase().includes(search.toLowerCase())
     );
+
+    const openEdit = (user) => {
+        setEditingUser(user);
+        setData({
+            name: user.name,
+            username: user.username ?? '',
+            email: user.email,
+            country: user.country ?? '',
+            whatsapp: user.whatsapp ?? '',
+        });
+        clearErrors();
+    };
+
+    const submitEdit = (e) => {
+        e.preventDefault();
+        put(route('admin.users.update', editingUser.id), {
+            onSuccess: () => setEditingUser(null),
+        });
+    };
 
     const suspend = (user) => {
         if (confirm(`Suspend ${user.name}? They won't be able to log in.`)) {
@@ -76,7 +105,7 @@ export default function AdminUsersIndex({ users }) {
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm min-w-[860px]">
+                    <table className="w-full text-sm min-w-[900px]">
                         <thead>
                             <tr className="border-b border-navy/10 text-left text-xs text-navy/40 uppercase tracking-wide">
                                 <th className="px-6 py-4 font-medium">Name</th>
@@ -121,6 +150,14 @@ export default function AdminUsersIndex({ users }) {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex justify-end items-center gap-3">
+                                            <button
+                                                onClick={() => openEdit(user)}
+                                                title="Edit"
+                                                className="text-navy/50 hover:text-navy transition-colors"
+                                            >
+                                                <Pencil size={16} />
+                                            </button>
+
                                             {user.is_admin ? (
                                                 <button
                                                     onClick={() => removeAdmin(user)}
@@ -181,6 +218,89 @@ export default function AdminUsersIndex({ users }) {
                     </div>
                 )}
             </div>
+
+            <Modal show={!!editingUser} onClose={() => setEditingUser(null)} maxWidth="md">
+                {editingUser && (
+                    <form onSubmit={submitEdit} className="p-6">
+                        <h2 className="font-display font-bold text-navy text-lg mb-4">
+                            Edit {editingUser.name}
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-navy/70 mb-1">Name</label>
+                                <input
+                                    type="text"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    className="w-full rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                                />
+                                {errors.name && <p className="text-status-rejected text-xs mt-1">{errors.name}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-navy/70 mb-1">Username</label>
+                                <input
+                                    type="text"
+                                    value={data.username}
+                                    onChange={(e) => setData('username', e.target.value)}
+                                    className="w-full rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                                />
+                                {errors.username && <p className="text-status-rejected text-xs mt-1">{errors.username}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-navy/70 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    className="w-full rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                                />
+                                {errors.email && <p className="text-status-rejected text-xs mt-1">{errors.email}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-navy/70 mb-1">Country</label>
+                                    <input
+                                        type="text"
+                                        value={data.country}
+                                        onChange={(e) => setData('country', e.target.value)}
+                                        className="w-full rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-navy/70 mb-1">WhatsApp</label>
+                                    <input
+                                        type="text"
+                                        value={data.whatsapp}
+                                        onChange={(e) => setData('whatsapp', e.target.value)}
+                                        className="w-full rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => setEditingUser(null)}
+                                className="px-4 py-2 text-sm font-medium text-navy/60 hover:text-navy"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="px-4 py-2 bg-signal text-navy text-sm font-semibold rounded-lg hover:bg-signal-dark disabled:opacity-50"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                )}
+            </Modal>
         </AdminLayout>
     );
 }

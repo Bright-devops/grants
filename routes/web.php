@@ -100,6 +100,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Users — full management via UserController
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
     Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');

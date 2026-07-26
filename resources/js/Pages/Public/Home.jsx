@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "@inertiajs/react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -7,6 +8,7 @@ import {
   BadgeCheck,
   HeartHandshake,
   Menu,
+  X,
 } from "lucide-react";
 
 // Fixed: images live in resources/js/Pages/Public/images,
@@ -72,7 +74,18 @@ const trustItems = [
   },
 ];
 
+const navLinks = [
+  { href: "#about", label: "About" },
+  { href: "#programs", label: "Programs" },
+  { href: "#process", label: "How It Works" },
+  { href: "#faq", label: "FAQ" },
+];
+
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
     <main className="bg-slate-50 text-slate-900">
 
@@ -82,7 +95,7 @@ export default function Home() {
 
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
 
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3" onClick={closeMobileMenu}>
 
             <img
               src={logo}
@@ -90,27 +103,15 @@ export default function Home() {
               className="h-11 w-auto"
             />
 
-            
-
           </Link>
 
           <nav className="hidden items-center gap-10 text-sm font-medium lg:flex">
 
-            <a href="#about" className="hover:text-blue-600">
-              About
-            </a>
-
-            <a href="#programs" className="hover:text-blue-600">
-              Programs
-            </a>
-
-            <a href="#process" className="hover:text-blue-600">
-              How It Works
-            </a>
-
-            <a href="#faq" className="hover:text-blue-600">
-              FAQ
-            </a>
+            {navLinks.map((link) => (
+              <a key={link.href} href={link.href} className="hover:text-blue-600">
+                {link.label}
+              </a>
+            ))}
 
           </nav>
 
@@ -132,11 +133,69 @@ export default function Home() {
 
           </div>
 
-          <button className="lg:hidden">
-            <Menu size={28} />
+          <button
+            type="button"
+            className="lg:hidden"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
 
         </div>
+
+        {/* ============= MOBILE MENU PANEL ============= */}
+
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              id="mobile-menu"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden border-t border-slate-200 bg-white lg:hidden"
+            >
+              <nav className="flex flex-col gap-1 px-6 py-6">
+
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobileMenu}
+                    className="rounded-lg px-3 py-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-blue-600"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+
+                <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4">
+
+                  <Link
+                    href="/login"
+                    onClick={closeMobileMenu}
+                    className="rounded-xl px-5 py-3 text-center font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    Sign In
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    onClick={closeMobileMenu}
+                    className="rounded-xl bg-blue-600 px-6 py-3 text-center font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Start Application
+                  </Link>
+
+                </div>
+
+              </nav>
+
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </header>
 

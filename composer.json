@@ -89,13 +89,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-
-     "repositories": [
-       {
-           "type": "path",
-           "url": "vendor/dompdf/dompdf",
-           "options": { "symlink": false }
-       }
-   ]
+    "prefer-stable": true
 }

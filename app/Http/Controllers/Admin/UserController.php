@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +22,7 @@ class UserController extends Controller
             ->map(fn(User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'country' => $user->country,
                 'whatsapp' => $user->whatsapp,
@@ -34,6 +37,23 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
         ]);
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'country' => ['nullable', 'string', 'max:255'],
+            'whatsapp' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user->update($validated);
+
+        ActivityLog::log('user.updated', $user);
+
+        return back()->with('success', "{$user->name}'s details updated.");
     }
 
     public function suspend(User $user): RedirectResponse

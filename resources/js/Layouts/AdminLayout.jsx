@@ -7,6 +7,7 @@ import { adminNav } from '@/Config/navigation';
 export default function AdminLayout({ children, header }) {
     const { auth, ziggy, settings } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const currentRoute = ziggy?.location ?? '';
 
     return (
@@ -78,11 +79,43 @@ export default function AdminLayout({ children, header }) {
                             <h1 className="font-display font-semibold text-navy text-lg">{header}</h1>
                         )}
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-navy/60 hidden sm:block">{auth.user.name}</span>
-                        <div className="w-9 h-9 rounded-full bg-signal/20 text-signal flex items-center justify-center font-display font-semibold text-sm">
-                            {auth.user.name?.charAt(0).toUpperCase()}
-                        </div>
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                            className="flex items-center gap-3"
+                        >
+                            <span className="text-sm text-navy/60 hidden sm:block">{auth.user.name}</span>
+                            <div className="w-9 h-9 rounded-full bg-signal/20 text-signal flex items-center justify-center font-display font-semibold text-sm">
+                                {auth.user.name?.charAt(0).toUpperCase()}
+                            </div>
+                        </button>
+
+                        {profileMenuOpen && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-navy/10 py-1 z-20">
+                                    <div className="px-4 py-2 border-b border-navy/10">
+                                        <p className="text-sm font-medium text-navy truncate">{auth.user.name}</p>
+                                        <p className="text-xs text-navy/50 truncate">{auth.user.email}</p>
+                                    </div>
+                                    <Link
+                                        href={route('profile.edit')}
+                                        className="block px-4 py-2 text-sm text-navy/70 hover:bg-cloud"
+                                    >
+                                        Profile Settings
+                                    </Link>
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        className="block w-full text-left px-4 py-2 text-sm text-navy/70 hover:bg-cloud"
+                                    >
+                                        Log out
+                                    </Link>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </header>
 
