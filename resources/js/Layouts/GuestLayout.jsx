@@ -2,12 +2,17 @@
 
 import { Link, usePage } from "@inertiajs/react";
 import { ShieldCheck, BadgeCheck, Globe2 } from "lucide-react";
+import GoogleTranslate from "@/Components/GoogleTranslate";
 
 export default function GuestLayout({ children }) {
     const { settings } = usePage().props;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+
+            <div className="fixed top-4 right-4 z-50">
+                <GoogleTranslate />
+            </div>
 
             <div className="grid min-h-screen lg:grid-cols-2">
 

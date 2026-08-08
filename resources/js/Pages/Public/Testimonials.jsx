@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Star } from 'lucide-react';
+import GoogleTranslate from '@/Components/GoogleTranslate';
 
 export default function PublicTestimonials({ testimonials }) {
     return (
@@ -11,9 +12,12 @@ export default function PublicTestimonials({ testimonials }) {
                         <Link href="/" className="font-display font-bold text-lg">
                             Grant<span className="text-signal">Portal</span>
                         </Link>
-                        <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white">
-                            Log in
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <GoogleTranslate variant="dark" />
+                            <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white">
+                                Log in
+                            </Link>
+                        </div>
                     </div>
                 </header>
 

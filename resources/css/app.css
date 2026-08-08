@@ -61,3 +61,63 @@
 body {
     @apply bg-cloud text-ink font-sans antialiased;
 }
+
+/* ===== GOOGLE TRANSLATE WIDGET =====
+   Google injects a top banner iframe + toolbar styling on <body> when a
+   translation is active, and its default dropdown look doesn't match the
+   app. This trims it down to a plain, theme-friendly select. */
+
+.goog-te-banner-frame,
+.skiptranslate > .goog-te-banner-frame {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+}
+
+.goog-tooltip,
+.goog-tooltip:hover {
+    display: none !important;
+}
+
+.goog-text-highlight {
+    background: none !important;
+    box-shadow: none !important;
+}
+
+.gt-widget .goog-te-gadget {
+    font-family: inherit !important;
+    font-size: 0 !important;
+    line-height: 1;
+}
+
+.gt-widget .goog-te-gadget-simple {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+}
+
+.gt-widget .goog-te-gadget-icon {
+    display: none !important;
+}
+
+.gt-widget .goog-te-menu-value {
+    font-size: 0.8125rem !important;
+    font-weight: 500;
+}
+
+.gt-widget .goog-te-menu-value span {
+    color: inherit !important;
+    border: none !important;
+}
+
+.gt-widget--light .goog-te-menu-value span {
+    color: color-mix(in srgb, var(--color-navy) 60%, transparent) !important;
+}
+
+.gt-widget--dark .goog-te-menu-value span {
+    color: rgba(255, 255, 255, 0.8) !important;
+}

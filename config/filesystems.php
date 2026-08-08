@@ -41,7 +41,13 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Intentionally relative (not built from APP_URL). Building this from
+            // APP_URL ties every generated file URL to whatever host happens to be
+            // in .env, which breaks the moment the app is browsed via a different
+            // host/port (localhost vs 127.0.0.1 vs a real domain vs staging).
+            // A relative URL always resolves correctly against whatever origin the
+            // browser is actually using.
+            'url' => env('ASSET_URL') ? rtrim(env('ASSET_URL'), '/').'/storage' : '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

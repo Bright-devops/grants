@@ -17,6 +17,7 @@ import {
 import logo from "./images/logo.png";
 import heroImage from "./images/image-1.png";
 import aboutImage from "./images/about.png";
+import GoogleTranslate from "@/Components/GoogleTranslate";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -117,6 +118,8 @@ export default function Home() {
 
           <div className="hidden items-center gap-3 lg:flex">
 
+            <GoogleTranslate />
+
             <Link
               href="/login"
               className="rounded-xl px-5 py-3 font-medium text-slate-700 hover:bg-slate-100"
@@ -172,6 +175,10 @@ export default function Home() {
                 ))}
 
                 <div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4">
+
+                  <div className="self-center">
+                    <GoogleTranslate />
+                  </div>
 
                   <Link
                     href="/login"

@@ -79,6 +79,27 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fee helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Total outstanding grant fee across all disbursed applications that
+     * haven't had their fee collected yet. Charged when the user next
+     * requests a withdrawal, rather than before their application is
+     * reviewed.
+     */
+    public function outstandingGrantFee(): float
+    {
+        return (float) $this->grantApplications()
+            ->where('status', 'disbursed')
+            ->whereNotNull('fee_amount')
+            ->whereNull('fee_paid_at')
+            ->sum('fee_amount');
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class);

@@ -15,6 +15,8 @@ class Withdrawal extends Model
         'wallet_id',
         'reference',
         'amount',
+        'fee_amount',
+        'fee_status',
         'method',
         'destination_details',
         'status',
@@ -24,6 +26,7 @@ class Withdrawal extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'fee_amount' => 'decimal:2',
         'destination_details' => 'array',
         'paid_at' => 'datetime',
     ];
@@ -52,6 +55,11 @@ class Withdrawal extends Model
     public function invoice()
     {
         return $this->hasOne(Invoice::class);
+    }
+
+    public function feePayment()
+    {
+        return $this->hasOne(Payment::class);
     }
 
     public function scopePending($query)

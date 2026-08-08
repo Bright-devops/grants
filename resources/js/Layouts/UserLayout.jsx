@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import * as Icons from 'lucide-react';
 import { userNav } from '@/Config/navigation';
+import GoogleTranslate from '@/Components/GoogleTranslate';
 
 export default function UserLayout({ children, header }) {
     const { auth, ziggy, settings } = usePage().props;
@@ -93,7 +94,8 @@ export default function UserLayout({ children, header }) {
                         {header && <h1 className="font-display font-semibold text-navy text-lg">{header}</h1>}
                     </div>
 
-                    <div className="relative">
+                    <div className="relative flex items-center gap-3">
+                        <GoogleTranslate />
                         <button
                             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                             className="w-9 h-9 rounded-full bg-signal/20 text-signal flex items-center justify-center font-display font-semibold text-sm"

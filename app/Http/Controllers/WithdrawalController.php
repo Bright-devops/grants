@@ -26,6 +26,7 @@ class WithdrawalController extends Controller
     {
         return Inertia::render('Withdrawals/Create', [
             'wallet' => $request->user()->wallet,
+            'feeOwed' => $request->user()->outstandingGrantFee(),
         ]);
     }
 
@@ -33,6 +34,7 @@ class WithdrawalController extends Controller
     {
         $user = $request->user();
         $wallet = $user->wallet;
+        $feeOwed = $user->outstandingGrantFee();
 
         $destinationDetails = match ($request->validated('method')) {
             'crypto' => ['wallet_address' => $request->validated('wallet_address')],
@@ -45,8 +47,10 @@ class WithdrawalController extends Controller
             'zelle' => ['zelle_email' => $request->validated('zelle_email')],
         };
 
+        $withdrawal = null;
+
         try {
-            DB::transaction(function () use ($user, $wallet, $request, $destinationDetails, $walletService) {
+            DB::transaction(function () use ($user, $wallet, $request, $destinationDetails, $walletService, $feeOwed, &$withdrawal) {
                 // Debit immediately — locks the funds so the user can't
                 // double-spend across multiple withdrawal requests.
                 $walletService->debit(
@@ -55,16 +59,25 @@ class WithdrawalController extends Controller
                     'Withdrawal request'
                 );
 
-                Withdrawal::create([
+                $withdrawal = Withdrawal::create([
                     'user_id' => $user->id,
                     'wallet_id' => $wallet->id,
                     'amount' => $request->validated('amount'),
                     'method' => $request->validated('method'),
                     'destination_details' => $destinationDetails,
+                    // Snapshot whatever grant fee is currently outstanding —
+                    // this withdrawal won't be processed until it's paid.
+                    'fee_amount' => $feeOwed,
+                    'fee_status' => $feeOwed > 0 ? 'not_paid' : 'not_required',
                 ]);
             });
         } catch (RuntimeException $e) {
             return back()->with('error', $e->getMessage());
+        }
+
+        if ($feeOwed > 0) {
+            return redirect()->route('withdrawals.pay-fee', $withdrawal)
+                ->with('success', 'Withdrawal request submitted. A grant fee of $' . number_format($feeOwed, 2) . ' must be paid before it can be processed.');
         }
 
         return redirect()->route('withdrawals.index')->with('success', 'Withdrawal request submitted.');

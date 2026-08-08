@@ -23,9 +23,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\TestimonialController as PublicTestimonialController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WithdrawalController;
+use App\Http\Controllers\WithdrawalFeeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\KycController;
 use App\Http\Controllers\Admin\KycController as AdminKycController;
+use App\Http\Controllers\KycDocumentController;
+use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\InvoiceController;
 use Inertia\Inertia;
 
@@ -66,8 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
     Route::get('/withdrawals/create', [WithdrawalController::class, 'create'])->name('withdrawals.create');
     Route::post('/withdrawals', [WithdrawalController::class, 'store'])->middleware('throttle:10,1')->name('withdrawals.store');
+    Route::get('/withdrawals/{withdrawal}/pay-fee', [WithdrawalFeeController::class, 'create'])->name('withdrawals.pay-fee');
+    Route::post('/withdrawals/{withdrawal}/pay-fee', [WithdrawalFeeController::class, 'store'])->middleware('throttle:10,1')->name('withdrawals.pay-fee.store');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 
     // Notifications — full user-facing view via NotificationController
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -77,6 +83,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/settings', fn() => Inertia::render('Placeholder', ['title' => 'Settings']))->name('settings.index');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc.index');
     Route::post('/kyc', [KycController::class, 'store'])->middleware('throttle:10,1')->name('kyc.store');
+
+    // Secure document streaming — owner or admin only (checked in the controller).
+    // Never a raw public storage path: these are ID documents, payment proofs,
+    // and financial PDFs.
+    Route::get('/kyc/{kyc}/document/{type}', [KycDocumentController::class, 'show'])
+        ->where('type', 'front|back|selfie')
+        ->name('kyc.document');
+    Route::get('/payments/{payment}/proof', [PaymentProofController::class, 'show'])
+        ->name('payments.proof');
 });
 
 /*
@@ -170,6 +185,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
     Route::patch('/kyc/{kyc}/approve', [AdminKycController::class, 'approve'])->name('kyc.approve');
     Route::patch('/kyc/{kyc}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
+    Route::delete('/kyc/{kyc}', [AdminKycController::class, 'destroy'])->name('kyc.destroy');
 });
 
 require __DIR__ . '/auth.php';

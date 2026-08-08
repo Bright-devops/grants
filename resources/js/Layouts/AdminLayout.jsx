@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import * as Icons from 'lucide-react';
 import { adminNav } from '@/Config/navigation';
+import GoogleTranslate from '@/Components/GoogleTranslate';
 
 export default function AdminLayout({ children, header }) {
     const { auth, ziggy, settings } = usePage().props;
@@ -80,7 +81,8 @@ export default function AdminLayout({ children, header }) {
                         )}
                     </div>
 
-                    <div className="relative">
+                    <div className="relative flex items-center gap-3">
+                        <GoogleTranslate />
                         <button
                             onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                             className="flex items-center gap-3"

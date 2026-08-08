@@ -28,9 +28,12 @@ class KycController extends Controller
             return back()->with('error', 'Your verification is already under review.');
         }
 
-        $frontPath = $request->file('document_front')->store("kyc/{$user->id}", 'public');
-        $backPath = $request->file('document_back')?->store("kyc/{$user->id}", 'public');
-        $selfiePath = $request->file('selfie')?->store("kyc/{$user->id}", 'public');
+        // KYC documents are identity documents — store them on the private
+        // disk. They're never reachable by a public URL; access is only via
+        // KycDocumentController, which checks the requester owns them or is an admin.
+        $frontPath = $request->file('document_front')->store("kyc/{$user->id}", 'local');
+        $backPath = $request->file('document_back')?->store("kyc/{$user->id}", 'local');
+        $selfiePath = $request->file('selfie')?->store("kyc/{$user->id}", 'local');
 
         Kyc::create([
             'user_id' => $user->id,

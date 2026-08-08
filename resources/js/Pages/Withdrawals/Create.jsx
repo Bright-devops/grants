@@ -2,7 +2,7 @@ import { useForm } from '@inertiajs/react';
 import UserLayout from '@/Layouts/UserLayout';
 import VoucherCard from '@/Components/VoucherCard';
 
-export default function WithdrawalsCreate({ wallet }) {
+export default function WithdrawalsCreate({ wallet, feeOwed }) {
     const { data, setData, post, processing, errors } = useForm({
         amount: '',
         method: 'crypto',
@@ -22,6 +22,15 @@ export default function WithdrawalsCreate({ wallet }) {
     return (
         <UserLayout header="Request Withdrawal">
             <div className="max-w-lg mx-auto">
+                {feeOwed > 0 && (
+                    <div className="mb-6 bg-status-pending/10 text-status-pending text-sm px-4 py-3 rounded-lg">
+                        Heads up: you have an outstanding grant fee of{' '}
+                        <span className="font-mono font-medium">${feeOwed.toFixed(2)}</span> that was never collected
+                        when your grant was disbursed. It's charged on your <em>next</em> withdrawal — after you submit
+                        this request, you'll be asked to pay that fee and upload proof before it's processed.
+                    </div>
+                )}
+
                 <VoucherCard className="mb-6">
                     <p className="text-xs font-mono uppercase tracking-wider text-navy/50">Available Balance</p>
                     <p className="font-display text-2xl font-bold text-navy mt-1">${wallet?.balance ?? '0.00'}</p>

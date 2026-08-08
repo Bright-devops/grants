@@ -27,6 +27,10 @@ class WithdrawalController extends Controller
 
     public function approve(Withdrawal $withdrawal): RedirectResponse
     {
+        if ($withdrawal->fee_status === 'not_paid' || $withdrawal->fee_status === 'pending_confirmation') {
+            return back()->with('error', 'The outstanding grant fee on this withdrawal must be confirmed before it can be processed.');
+        }
+
         $withdrawal->update(['status' => 'processing']);
 
         $withdrawal->user->notify(new \App\Notifications\WithdrawalStatusNotification($withdrawal));
@@ -50,8 +54,9 @@ class WithdrawalController extends Controller
             'invoiceNumber' => $invoiceNumber,
         ]);
 
+        // Invoices carry bank/crypto destination details — keep them private.
         $pdfPath = "invoices/{$invoiceNumber}.pdf";
-        Storage::disk('public')->put($pdfPath, $pdf->output());
+        Storage::disk('local')->put($pdfPath, $pdf->output());
 
         Invoice::create([
             'invoice_number' => $invoiceNumber,

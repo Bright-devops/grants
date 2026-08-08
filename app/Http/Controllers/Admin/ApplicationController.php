@@ -23,10 +23,10 @@ class ApplicationController extends Controller
 
     public function approve(GrantApplication $application): RedirectResponse
     {
-        if ($application->payment_status !== 'confirmed') {
-            return back()->with('error', 'Payment must be confirmed before approving this application.');
-        }
-
+        // The application fee is no longer collected before approval — it's
+        // now owed against the grant once disbursed, and collected the next
+        // time the user requests a withdrawal. Approval is based on the
+        // application itself, not a separate upfront payment.
         $application->update([
             'status' => 'approved',
             'reviewed_at' => now(),
@@ -70,7 +70,14 @@ class ApplicationController extends Controller
             "Grant disbursement — {$application->reference}"
         );
 
-        $application->update(['status' => 'disbursed']);
+        // Snapshot the plan's fee at the moment of disbursement — this is
+        // what the user now owes, to be collected the next time they
+        // request a withdrawal. Snapshotting protects against the plan's
+        // fee changing later and retroactively altering what's owed.
+        $application->update([
+            'status' => 'disbursed',
+            'fee_amount' => $application->grantPlan->application_fee,
+        ]);
 
         $application->user->notify(new \App\Notifications\ApplicationStatusNotification($application));
         ActivityLog::log('application.disbursed', $application, ['amount' => $application->requested_amount]);

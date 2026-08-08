@@ -30,7 +30,9 @@ class PaymentController extends Controller
     {
         $this->authorizeOwner($application);
 
-        $proofPath = $request->file('proof')->store("payments/{$application->user_id}", 'public');
+        // Payment proofs (bank transfer screenshots, transaction receipts) can
+        // contain personal/financial details — store privately, same as KYC.
+        $proofPath = $request->file('proof')->store("payments/{$application->user_id}", 'local');
 
         Payment::create([
             'user_id' => $application->user_id,

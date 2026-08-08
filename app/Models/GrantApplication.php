@@ -15,6 +15,8 @@ class GrantApplication extends Model
         'grant_plan_id',
         'reference',
         'requested_amount',
+        'fee_amount',
+        'fee_paid_at',
         'status',
         'payment_status',
         'admin_notes',
@@ -23,6 +25,8 @@ class GrantApplication extends Model
 
     protected $casts = [
         'requested_amount' => 'decimal:2',
+        'fee_amount' => 'decimal:2',
+        'fee_paid_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
 

@@ -23,9 +23,11 @@ class KycController extends Controller
                     'id' => $kyc->id,
                     'user' => $kyc->user,
                     'document_type' => $kyc->document_type,
-                    'document_front_url' => Storage::url($kyc->document_front_path),
-                    'document_back_url' => $kyc->document_back_path ? Storage::url($kyc->document_back_path) : null,
-                    'selfie_url' => $kyc->selfie_path ? Storage::url($kyc->selfie_path) : null,
+                    // Served via KycDocumentController — auth + ownership/admin
+                    // checked on every request, never a raw public storage path.
+                    'document_front_url' => route('kyc.document', [$kyc, 'front']),
+                    'document_back_url' => $kyc->document_back_path ? route('kyc.document', [$kyc, 'back']) : null,
+                    'selfie_url' => $kyc->selfie_path ? route('kyc.document', [$kyc, 'selfie']) : null,
                     'status' => $kyc->status,
                     'rejection_reason' => $kyc->rejection_reason,
                     'created_at' => $kyc->created_at,
@@ -65,5 +67,35 @@ class KycController extends Controller
         ActivityLog::log('kyc.rejected', $kyc, ['reason' => $kyc->rejection_reason]);
 
         return back()->with('success', 'KYC rejected.');
+    }
+
+    /**
+     * Delete a KYC submission. Used for unsuitable/spam/duplicate submissions.
+     * Removes the underlying private-disk files along with the record, and
+     * records who deleted it and what was deleted for audit purposes — this
+     * is destructive and permanently removes someone's uploaded ID documents.
+     */
+    public function destroy(Request $request, Kyc $kyc): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        foreach ([$kyc->document_front_path, $kyc->document_back_path, $kyc->selfie_path] as $path) {
+            if ($path) {
+                Storage::disk('local')->delete($path);
+            }
+        }
+
+        ActivityLog::log('kyc.deleted', null, [
+            'kyc_id' => $kyc->id,
+            'user' => $kyc->user->email,
+            'was_status' => $kyc->status,
+            'reason' => $validated['reason'] ?? null,
+        ]);
+
+        $kyc->delete();
+
+        return back()->with('success', 'KYC submission deleted.');
     }
 }

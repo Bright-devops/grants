@@ -21,7 +21,7 @@ export default function InvoicesIndex({ invoices }) {
                                     </p>
                                 </div>
                                 
-                                   <a href={`/storage/${invoice.pdf_path}`}
+                                   <a href={invoice.download_url}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center gap-2 bg-signal text-navy font-semibold text-xs px-3 py-2 rounded-lg hover:bg-signal-dark transition-colors">

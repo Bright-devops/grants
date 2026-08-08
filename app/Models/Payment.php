@@ -14,6 +14,7 @@ class Payment extends Model
         'user_id',
         'payment_method_id',
         'grant_application_id',
+        'withdrawal_id',
         'reference',
         'amount',
         'proof_path',
@@ -49,6 +50,11 @@ class Payment extends Model
     public function grantApplication()
     {
         return $this->belongsTo(GrantApplication::class);
+    }
+
+    public function withdrawal()
+    {
+        return $this->belongsTo(Withdrawal::class);
     }
 
     public function scopeConfirmed($query)

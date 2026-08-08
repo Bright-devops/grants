@@ -1,6 +1,7 @@
 // resources/js/Layouts/PublicLayout.jsx
 import { Link, usePage } from '@inertiajs/react';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import GoogleTranslate from '@/Components/GoogleTranslate';
 
 export default function PublicLayout({ children }) {
     const { settings, auth } = usePage().props;
@@ -42,6 +43,7 @@ export default function PublicLayout({ children }) {
                     </nav>
 
                     <div className="flex items-center gap-3">
+                        <GoogleTranslate variant="dark" />
                         {auth?.user ? (
                             <Link
                                 href={route('dashboard')}
