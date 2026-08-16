@@ -21,6 +21,7 @@ class AdminAnnouncementNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
+            ->theme('uca')
             ->subject($this->title)
             ->greeting("Hi {$notifiable->name},")
             ->line($this->body);

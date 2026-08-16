@@ -21,7 +21,7 @@ class KycStatusNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $mail = (new MailMessage)->greeting("Hi {$notifiable->name},");
+        $mail = (new MailMessage)->theme('uca')->greeting("Hi {$notifiable->name},");
 
         if ($this->kyc->status === 'approved') {
             return $mail

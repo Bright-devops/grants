@@ -48,6 +48,12 @@ export default function AdminKycIndex({ submissions }) {
     const [deletingId, setDeletingId] = useState(null);
     const [deleteReason, setDeleteReason] = useState('');
 
+    // Defensive guard: even though the backend now excludes KYC rows whose
+    // user is missing/soft-deleted (whereHas('user') in KycController@index),
+    // this filter is a second layer so one bad record can never crash the
+    // whole admin page again, mirroring the same fix applied to Wallets.
+    const validSubmissions = submissions.filter((kyc) => kyc.user);
+
     const approve = (id) => {
         if (confirm('Approve this KYC submission?')) {
             router.patch(route('admin.kyc.approve', id));
@@ -83,7 +89,7 @@ export default function AdminKycIndex({ submissions }) {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {submissions.map((kyc) => (
+                {validSubmissions.map((kyc) => (
                     <VoucherCard key={kyc.id}>
                         <div className="flex items-start justify-between mb-4">
                             <div>
@@ -184,7 +190,7 @@ export default function AdminKycIndex({ submissions }) {
                     </VoucherCard>
                 ))}
 
-                {submissions.length === 0 && (
+                {validSubmissions.length === 0 && (
                     <div className="lg:col-span-2 bg-white rounded-xl p-12 text-center shadow-sm">
                         <p className="text-navy/50 text-sm">No KYC submissions yet.</p>
                     </div>

@@ -15,7 +15,11 @@ class ApplicationController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Applications/Index', [
-            'applications' => GrantApplication::with(['user:id,name,email', 'grantPlan:id,name'])
+            // whereHas('user') excludes applications whose owning account was
+            // deleted (soft or hard) — same guard as KycController/WalletController,
+            // so an orphaned row can never reach the page and crash on ->user->name.
+            'applications' => GrantApplication::whereHas('user')
+                ->with(['user:id,name,email', 'grantPlan:id,name'])
                 ->latest()
                 ->get(),
         ]);

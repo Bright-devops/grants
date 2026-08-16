@@ -19,7 +19,10 @@ class WithdrawalController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Withdrawals/Index', [
-            'withdrawals' => Withdrawal::with('user:id,name,email')
+            // whereHas('user') excludes withdrawals whose owning account was
+            // deleted (soft or hard) — same guard as KycController/WalletController.
+            'withdrawals' => Withdrawal::whereHas('user')
+                ->with('user:id,name,email')
                 ->latest()
                 ->get(),
         ]);

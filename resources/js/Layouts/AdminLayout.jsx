@@ -12,10 +12,10 @@ export default function AdminLayout({ children, header }) {
     const currentRoute = ziggy?.location ?? '';
 
     return (
-        <div className="min-h-screen bg-cloud flex">
+        <div className="h-screen bg-cloud flex overflow-hidden">
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-navy text-white flex flex-col transition-transform duration-200
+                className={`fixed lg:static inset-y-0 left-0 z-40 w-64 h-screen bg-navy text-white flex flex-col transition-transform duration-200
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="h-16 flex items-center px-6 border-b border-white/10">
@@ -67,7 +67,7 @@ export default function AdminLayout({ children, header }) {
             )}
 
             {/* Main content */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
                 <header className="h-16 bg-white border-b border-navy/10 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-20">
                     <div className="flex items-center gap-4">
                         <button

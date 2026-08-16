@@ -17,6 +17,7 @@ class WalletController extends Controller
     {
         return Inertia::render('Admin/Wallet/Index', [
             'wallets' => Wallet::with('user:id,name,email')
+                ->whereHas('user') // exclude wallets whose user was deleted (soft or hard)
                 ->latest()
                 ->get(),
             'totals' => [

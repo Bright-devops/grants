@@ -14,7 +14,10 @@ class PaymentController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Payments/Index', [
-            'payments' => Payment::with(['user:id,name,email', 'paymentMethod:id,name', 'grantApplication:id,reference', 'withdrawal:id,reference'])
+            // whereHas('user') excludes payments whose owning account was
+            // deleted (soft or hard) — same guard as KycController/WalletController.
+            'payments' => Payment::whereHas('user')
+                ->with(['user:id,name,email', 'paymentMethod:id,name', 'grantApplication:id,reference', 'withdrawal:id,reference'])
                 ->latest()
                 ->get()
                 ->map(fn(Payment $p) => [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\UserDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -76,15 +77,70 @@ class UserController extends Controller
         return back()->with('success', "{$user->name} has been reactivated.");
     }
 
-    public function destroy(User $user): RedirectResponse
+    /**
+     * Permanently delete a user AND everything connected to them — wallet,
+     * KYC submissions (+ files), grant applications, payments, and
+     * withdrawals — in one click. UserDeletionService cascades all of it
+     * via the DB's own cascadeOnDelete FKs. No financial guards: wallet
+     * balance and withdrawal status are not checked. The only remaining
+     * protection is that admins can't be deleted at all.
+     */
+    public function destroy(User $user, UserDeletionService $userDeletionService): RedirectResponse
     {
         abort_if($user->hasRole('admin'), 403, 'Cannot delete an admin.');
 
-        ActivityLog::log('user.deleted', $user);
+        ActivityLog::log('user.deleted', null, [
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
 
-        $user->delete();
+        $userDeletionService->forceDelete($user);
 
-        return back()->with('success', 'User deleted.');
+        return back()->with('success', "{$user->name} and all associated records have been permanently deleted.");
+    }
+
+    public function bulkDestroy(Request $request, UserDeletionService $userDeletionService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct', 'exists:users,id'],
+        ]);
+
+        $users = User::whereIn('id', $validated['ids'])->get();
+
+        $deletedCount = 0;
+        $skippedAdmins = 0;
+
+        foreach ($users as $user) {
+            // Never let a bulk action take out an admin account, even if
+            // it was somehow included in the selection (e.g. a stale
+            // checkbox list from before a role change).
+            if ($user->hasRole('admin')) {
+                $skippedAdmins++;
+                continue;
+            }
+
+            ActivityLog::log('user.deleted', null, [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]);
+
+            $userDeletionService->forceDelete($user);
+            $deletedCount++;
+        }
+
+        $message = $deletedCount === 1
+            ? '1 user and all associated records permanently deleted.'
+            : "{$deletedCount} users and all associated records permanently deleted.";
+        if ($skippedAdmins > 0) {
+            $message .= $skippedAdmins === 1
+                ? ' 1 admin account was skipped.'
+                : " {$skippedAdmins} admin accounts were skipped.";
+        }
+
+        return back()->with('success', $message);
     }
 
     public function makeAdmin(User $user): RedirectResponse

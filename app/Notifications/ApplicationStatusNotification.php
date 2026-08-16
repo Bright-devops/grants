@@ -21,7 +21,7 @@ class ApplicationStatusNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $mail = (new MailMessage)->greeting("Hi {$notifiable->name},");
+        $mail = (new MailMessage)->theme('uca')->greeting("Hi {$notifiable->name},");
 
         return match ($this->application->status) {
             'approved' => $mail

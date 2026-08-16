@@ -22,6 +22,7 @@ export default function AdminUsersIndex({ users }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [editingUser, setEditingUser] = useState(null);
+    const [selected, setSelected] = useState([]);
 
     const { data, setData, put, processing, errors, clearErrors } = useForm({
         name: '',
@@ -36,6 +37,32 @@ export default function AdminUsersIndex({ users }) {
             u.name.toLowerCase().includes(search.toLowerCase()) ||
             u.email.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Admins can't be bulk-deleted (same rule as the single-delete action),
+    // so they're excluded from "select all" and can't be checked individually.
+    const selectableIds = filtered.filter((u) => !u.is_admin).map((u) => u.id);
+    const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.includes(id));
+
+    const toggleAll = () => {
+        setSelected((prev) =>
+            allSelected ? prev.filter((id) => !selectableIds.includes(id)) : Array.from(new Set([...prev, ...selectableIds]))
+        );
+    };
+
+    const toggleOne = (id) => {
+        setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    };
+
+    const bulkDelete = () => {
+        if (selected.length === 0) return;
+        const count = selected.length;
+        if (confirm(`Permanently delete ${count} user${count === 1 ? '' : 's'}? This cannot be undone.`)) {
+            router.delete(route('admin.users.bulk-destroy'), {
+                data: { ids: selected },
+                onSuccess: () => setSelected([]),
+            });
+        }
+    };
 
     const openEdit = (user) => {
         setEditingUser(user);
@@ -92,15 +119,38 @@ export default function AdminUsersIndex({ users }) {
                 </div>
             )}
 
-            <div className="relative mb-6 w-full max-w-sm">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/40" />
-                <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
-                />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+                <div className="relative w-full max-w-sm">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy/40" />
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 rounded-lg border-navy/20 focus:border-signal focus:ring-signal text-sm"
+                    />
+                </div>
+
+                {selected.length > 0 && (
+                    <div className="flex items-center gap-3 bg-navy/5 rounded-lg px-4 py-2.5">
+                        <span className="text-sm font-medium text-navy">
+                            {selected.length} selected
+                        </span>
+                        <button
+                            onClick={bulkDelete}
+                            className="flex items-center gap-1.5 text-sm font-semibold text-status-rejected hover:text-status-rejected/80 transition-colors"
+                        >
+                            <Trash2 size={15} />
+                            Delete Selected
+                        </button>
+                        <button
+                            onClick={() => setSelected([])}
+                            className="text-sm text-navy/50 hover:text-navy transition-colors"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -108,6 +158,16 @@ export default function AdminUsersIndex({ users }) {
                     <table className="w-full text-sm min-w-[900px]">
                         <thead>
                             <tr className="border-b border-navy/10 text-left text-xs text-navy/40 uppercase tracking-wide">
+                                <th className="pl-6 pr-2 py-4 font-medium w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={allSelected}
+                                        onChange={toggleAll}
+                                        disabled={selectableIds.length === 0}
+                                        className="rounded border-navy/20 text-signal focus:ring-signal"
+                                        aria-label="Select all users"
+                                    />
+                                </th>
                                 <th className="px-6 py-4 font-medium">Name</th>
                                 <th className="px-6 py-4 font-medium">Country</th>
                                 <th className="px-6 py-4 font-medium">KYC</th>
@@ -119,7 +179,22 @@ export default function AdminUsersIndex({ users }) {
                         </thead>
                         <tbody>
                             {filtered.map((user) => (
-                                <tr key={user.id} className="border-b border-navy/5 last:border-0 hover:bg-cloud/50 transition-colors">
+                                <tr
+                                    key={user.id}
+                                    className={`border-b border-navy/5 last:border-0 hover:bg-cloud/50 transition-colors ${
+                                        selected.includes(user.id) ? 'bg-signal/5' : ''
+                                    }`}
+                                >
+                                    <td className="pl-6 pr-2 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selected.includes(user.id)}
+                                            onChange={() => toggleOne(user.id)}
+                                            disabled={user.is_admin}
+                                            className="rounded border-navy/20 text-signal focus:ring-signal disabled:opacity-30"
+                                            aria-label={`Select ${user.name}`}
+                                        />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium text-navy">{user.name}</p>

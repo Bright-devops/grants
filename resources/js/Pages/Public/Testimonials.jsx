@@ -1,66 +1,63 @@
-import { Head, Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
-import GoogleTranslate from '@/Components/GoogleTranslate';
+import { Head } from '@inertiajs/react';
+import { Star, Users } from 'lucide-react';
+import PublicLayout from '@/Layouts/PublicLayout';
 
-export default function PublicTestimonials({ testimonials }) {
+export default function PublicTestimonials({ testimonials = [] }) {
     return (
-        <>
+        <PublicLayout>
             <Head title="Testimonials" />
-            <div className="min-h-screen bg-cloud">
-                <header className="bg-navy text-white">
-                    <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-                        <Link href="/" className="font-display font-bold text-lg">
-                            Grant<span className="text-signal">Portal</span>
-                        </Link>
-                        <div className="flex items-center gap-3">
-                            <GoogleTranslate variant="dark" />
-                            <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white">
-                                Log in
-                            </Link>
-                        </div>
-                    </div>
-                </header>
 
-                <main className="max-w-5xl mx-auto px-6 py-12">
-                    <h1 className="font-display text-3xl font-bold text-navy mb-2">What our recipients say</h1>
-                    <p className="text-navy/60 mb-10">Real stories from real grant recipients.</p>
+            <div className="bg-white border-b border-slate-100">
+                <div className="max-w-6xl mx-auto px-6 py-14">
+                    <span className="text-primary-700 text-xs font-semibold tracking-wide uppercase">Applicant experiences</span>
+                    <h1 className="font-display text-3xl font-bold text-navy mt-3">What our applicants say</h1>
+                    <p className="text-ink/60 mt-3 max-w-xl">Real stories from real grant recipients.</p>
+                </div>
+            </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="max-w-6xl mx-auto px-6 py-14">
+                {testimonials.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {testimonials.map((t) => (
-                            <div key={t.id} className="bg-white rounded-xl p-6 shadow-sm">
-                                <div className="flex gap-0.5 mb-3">
+                            <div key={t.id} className="border border-slate-200 rounded-xl p-6">
+                                <div className="flex gap-0.5 mb-4">
                                     {Array.from({ length: 5 }).map((_, i) => (
                                         <Star
-    key={i}
-    size={14}
-    className={i < t.rating ? 'text-signal' : 'text-navy/15'}
-    fill={i < t.rating ? 'currentColor' : 'none'}
-/>
+                                            key={i}
+                                            size={14}
+                                            className={i < t.rating ? 'text-signal' : 'text-slate-200'}
+                                            fill={i < t.rating ? 'currentColor' : 'none'}
+                                        />
                                     ))}
                                 </div>
-                                <p className="text-navy/70 text-sm leading-relaxed">"{t.message}"</p>
-                                <div className="flex items-center gap-3 mt-5">
+                                <p className="text-ink/70 text-sm leading-relaxed">&ldquo;{t.message}&rdquo;</p>
+                                <div className="flex items-center gap-3 mt-6">
                                     {t.photo_path ? (
-                                        <img src={`/storage/${t.photo_path}`} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                                        <img
+                                            src={`/storage/${t.photo_path}`}
+                                            alt={t.name}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-signal/20 text-signal flex items-center justify-center font-display font-semibold text-sm">
+                                        <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center font-display font-semibold text-sm">
                                             {t.name.charAt(0).toUpperCase()}
                                         </div>
                                     )}
                                     <div>
                                         <p className="font-medium text-navy text-sm">{t.name}</p>
-                                        <p className="text-xs text-navy/40">{t.country}</p>
+                                        {t.country && <p className="text-xs text-ink/40">{t.country}</p>}
                                     </div>
                                 </div>
                             </div>
                         ))}
-
-                        {testimonials.length === 0 && (
-                            <p className="text-navy/40 text-sm col-span-full">No testimonials yet.</p>
-                        )}
                     </div>
-                </main>
+                ) : (
+                    <div className="text-center py-16 border border-dashed border-slate-200 rounded-xl">
+                        <Users className="mx-auto text-navy/20" size={32} />
+                        <p className="mt-4 text-ink/50 text-sm">No testimonials yet.</p>
+                    </div>
+                )}
             </div>
-        </>
+        </PublicLayout>
     );
 }

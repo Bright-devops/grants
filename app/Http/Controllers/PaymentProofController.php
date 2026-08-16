@@ -19,6 +19,8 @@ class PaymentProofController extends Controller
         $user = $request->user();
         abort_unless($user->id === $payment->user_id || $user->hasRole('admin'), 403);
 
+        abort_if(empty($payment->proof_path), 404, 'No payment proof uploaded for this payment.');
+
         abort_unless(Storage::disk('local')->exists($payment->proof_path), 404);
 
         return Storage::disk('local')->response($payment->proof_path, null, [

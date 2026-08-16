@@ -16,7 +16,14 @@ class KycController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Kyc/Index', [
-            'submissions' => Kyc::with('user:id,name,email')
+            // whereHas('user') only matches rows whose user relation still
+            // resolves. Since User uses soft deletes, this silently excludes
+            // any KYC submission belonging to a soft-deleted or otherwise
+            // missing user, before it ever reaches the frontend — this is
+            // what stops kyc.user being null when the page maps over
+            // submissions.
+            'submissions' => Kyc::whereHas('user')
+                ->with('user:id,name,email')
                 ->latest()
                 ->get()
                 ->map(fn(Kyc $kyc) => [
@@ -70,10 +77,12 @@ class KycController extends Controller
     }
 
     /**
-     * Delete a KYC submission. Used for unsuitable/spam/duplicate submissions.
-     * Removes the underlying private-disk files along with the record, and
-     * records who deleted it and what was deleted for audit purposes — this
-     * is destructive and permanently removes someone's uploaded ID documents.
+     * Permanently delete a KYC submission. Used for unsuitable/spam/duplicate
+     * submissions. Removes the underlying private-disk files along with the
+     * record (forceDelete — no more trashed row left with deleted_at set),
+     * and records who deleted it and what was deleted for audit purposes —
+     * this is destructive and permanently removes someone's uploaded ID
+     * documents.
      */
     public function destroy(Request $request, Kyc $kyc): RedirectResponse
     {
@@ -94,8 +103,8 @@ class KycController extends Controller
             'reason' => $validated['reason'] ?? null,
         ]);
 
-        $kyc->delete();
+        $kyc->forceDelete();
 
-        return back()->with('success', 'KYC submission deleted.');
+        return back()->with('success', 'KYC submission permanently deleted.');
     }
 }
